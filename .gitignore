@@ -5,3 +5,4 @@ staticfiles/
 .env
 .coverage
 htmlcov/
+.dist/

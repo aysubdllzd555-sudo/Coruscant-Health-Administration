@@ -1,6 +1,6 @@
 line-length = 140
 target-version = "py312"
-extend-exclude = ["*/migrations/*"]
+extend-exclude = ["*/migrations/*", ".dist", "staticfiles"]
 [lint]
 select = ["E", "F", "W", "I", "B", "UP"]
 ignore = ["E501", "B904"]
