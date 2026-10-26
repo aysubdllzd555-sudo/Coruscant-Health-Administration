@@ -24,8 +24,8 @@ jobs:
       DJANGO_SECRET_KEY: ci-only-secret
       DATABASE_URL: postgres://cha:cha@localhost:5432/cha
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with: { python-version: "3.13", cache: pip }
       - run: pip install -r requirements-dev.txt
       - name: Lint
@@ -44,16 +44,21 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: production
+    env:
+      HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+      APP_URL: ${{ vars.APP_URL || 'https://coruscant-health-administration.onrender.com' }}
     steps:
+      - name: Deploy hook not configured
+        if: env.HOOK == ''
+        run: echo "::notice::RENDER_DEPLOY_HOOK_URL secret not set – deploy skipped"
       - name: Trigger Render deploy
-        env:
-          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-        run: |
-          if [ -z "$HOOK" ]; then echo "RENDER_DEPLOY_HOOK_URL secret not set – skipping"; exit 0; fi
-          curl -fsS -X POST "$HOOK"
+        if: env.HOOK != ''
+        run: curl -fsS -X POST "$HOOK"
       - name: Smoke test
+        if: env.HOOK != ''
         run: |
-          URL="https://coruscant-health-administration.onrender.com/healthz"
+          sleep 60
+          URL="$APP_URL/healthz"
           for i in $(seq 1 30); do
             if curl -fsS "$URL" | grep -q '"status": "ok"'; then echo "healthy"; exit 0; fi
             sleep 20
