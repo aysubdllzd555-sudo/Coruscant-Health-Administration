@@ -1,0 +1,90 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Coruscant Health{% endblock %} · CHA</title>
+  <meta name="color-scheme" content="light dark">
+  <link rel="icon" href="{% static 'img/mark.svg' %}" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <script src="{% static 'js/theme.js' %}"></script>
+  <script src="{% static 'js/app.js' %}" defer></script>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+<a class="skip" href="#main">Skip to content</a>
+{% if user.is_authenticated and user.is_approved %}
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <a class="brand" href="{% url 'home' %}">
+      <img src="{% static 'img/mark.svg' %}" alt="" width="32" height="32">
+      <span><b>Coruscant Health</b><small>Medical Management System</small></span>
+    </a>
+    <nav class="nav" aria-label="Main">
+      {% with rn=request.resolver_match.url_name %}
+      {% if user.is_patient %}
+        <p class="nav-label">My health</p>
+        <a href="{% url 'clinic:my_dashboard' %}" {% if rn == 'my_dashboard' %}aria-current="page"{% endif %}><svg><use href="#i-pulse"/></svg>Readings</a>
+        <a href="{% url 'clinic:my_reports' %}" {% if rn == 'my_reports' %}aria-current="page"{% endif %}><svg><use href="#i-note"/></svg>Doctor's advice</a>
+        <a href="{% url 'clinic:my_documents' %}" {% if rn == 'my_documents' %}aria-current="page"{% endif %}><svg><use href="#i-lock"/></svg>Documents</a>
+        <a href="{% url 'clinic:my_messages' %}" {% if rn == 'my_messages' %}aria-current="page"{% endif %}><svg><use href="#i-chat"/></svg>Messages</a>
+        <a href="{% url 'clinic:my_devices' %}" {% if rn == 'my_devices' %}aria-current="page"{% endif %}><svg><use href="#i-device"/></svg>Devices</a>
+      {% endif %}
+      {% if user.is_doctor or user.is_emergency or user.is_admin_role %}
+        <p class="nav-label">Clinical</p>
+        <a href="{% url 'clinic:worklist' %}" {% if rn == 'worklist' or rn == 'patient_chart' %}aria-current="page"{% endif %}><svg><use href="#i-list"/></svg>Patient worklist</a>
+        <a href="{% url 'clinic:ed_board' %}" {% if rn == 'ed_board' %}aria-current="page"{% endif %}><svg><use href="#i-grid"/></svg>ED tracking board</a>
+        <a href="{% url 'clinic:ed_intake' %}" {% if rn == 'ed_intake' %}aria-current="page"{% endif %}><svg><use href="#i-plus"/></svg>Rapid intake <kbd>N</kbd></a>
+      {% endif %}
+      {% if user.is_department or user.is_admin_role %}
+        <p class="nav-label">Department</p>
+        <a href="{% url 'clinic:department_queue' %}" {% if rn == 'department_queue' or rn == 'result_order' %}aria-current="page"{% endif %}><svg><use href="#i-flask"/></svg>Order queue</a>
+      {% endif %}
+      {% if user.is_admin_role %}
+        <p class="nav-label">Administration</p>
+        <a href="{% url 'accounts:approvals' %}" {% if rn == 'approvals' %}aria-current="page"{% endif %}><svg><use href="#i-check"/></svg>Approvals</a>
+        <a href="{% url 'accounts:users' %}" {% if rn == 'users' %}aria-current="page"{% endif %}><svg><use href="#i-users"/></svg>Users</a>
+        <a href="{% url 'accounts:monitor' %}" {% if rn == 'monitor' %}aria-current="page"{% endif %}><svg><use href="#i-gauge"/></svg>System monitor</a>
+        <a href="{% url 'admin:index' %}"><svg><use href="#i-db"/></svg>Database admin</a>
+      {% endif %}
+      {% endwith %}
+    </nav>
+    <div class="sidebar-foot">
+      <div class="me">
+        <span class="avatar">{{ user.initials }}</span>
+        <span><b>{% if user.is_doctor %}Dr. {% endif %}{{ user.display_name }}</b><small>{{ user.get_role_display }}{% if user.department %} · {{ user.department.name }}{% endif %}</small></span>
+      </div>
+      <div class="foot-actions">
+        <button type="button" class="icon-btn" data-theme-toggle aria-label="Toggle colour theme"><svg><use href="#i-moon"/></svg></button>
+        <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="icon-btn" aria-label="Sign out" title="Sign out"><svg><use href="#i-out"/></svg></button></form>
+      </div>
+    </div>
+  </aside>
+  <div class="main-col">
+    <header class="topbar">
+      <button class="icon-btn menu-btn" type="button" data-menu aria-controls="sidebar" aria-expanded="false" aria-label="Menu"><svg><use href="#i-menu"/></svg></button>
+      <div class="crumbs">{% block crumbs %}{% endblock %}</div>
+      {% if not user.is_patient and not user.is_department %}
+      <form class="search" action="{% url 'clinic:worklist' %}" role="search">
+        <svg><use href="#i-search"/></svg>
+        <input name="q" placeholder="Search name, MRN, complaint" aria-label="Search patients" value="{{ request.GET.q|default:'' }}">
+        <input type="hidden" name="scope" value="all"><kbd>/</kbd>
+      </form>
+      {% endif %}
+      <span class="clock mono" data-clock></span>
+    </header>
+    <main id="main" class="content">
+      {% if messages %}<div class="toasts" role="status">{% for m in messages %}<div class="toast toast-{{ m.tags }}">{{ m }}<button type="button" aria-label="Dismiss" data-dismiss>×</button></div>{% endfor %}</div>{% endif %}
+      {% block content %}{% endblock %}
+    </main>
+    <footer class="footer"><span>Coruscant Health Administration · Galactic Republic</span><span class="mono">v{{ APP_VERSION }} · {{ GIT_SHA }}</span></footer>
+  </div>
+</div>
+{% else %}
+  {% block public %}{% endblock %}
+{% endif %}
+{% include "icons.svg" %}
+</body>
+</html>

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Doctor's advice{% endblock %}
+{% block crumbs %}My health · Doctor's advice{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Doctor's advice</h1><p class="lead">Reports and prescriptions written by your care team after reviewing your readings.</p></div>
+<a class="btn" href="{% url 'clinic:my_messages' %}"><svg><use href="#i-chat"/></svg>Ask a question</a></div>
+<section class="card">
+  {% for r in reports %}
+  <article class="report {% if not r.read_by_patient_at %}unread{% endif %}">
+    <h3>{{ r.title }} {% if not r.read_by_patient_at %}<span class="badge b-accent">New</span>{% endif %}</h3>
+    <p class="meta">Dr. {{ r.doctor.display_name }} · {{ r.created_at|date:"d M Y, H:i" }} · Condition: {% include "partials/trend.html" with t=r.condition %}{% if r.follow_up_on %} · Follow-up {{ r.follow_up_on|date:"d M Y" }}{% endif %}</p>
+    <p class="label">What we found</p>
+    <p class="assess">{{ r.assessment }}</p>
+    <p class="label">What to do</p>
+    <div class="rx">{{ r.suggestions }}</div>
+  </article>
+  {% empty %}<p class="empty">No reports yet.</p>{% endfor %}
+</section>
+{% endblock %}

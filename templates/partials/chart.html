@@ -1,0 +1,16 @@
+<section class="card chart-card" data-chart="series-data" data-metric="{{ metric|default:'hr' }}">
+  <div class="card-head wrap">
+    <div><h2>Vital signs</h2><p class="sub">{{ series|length }} readings · green band = normal range</p></div>
+    <div class="metric-tabs" role="group" aria-label="Metric">
+      <button type="button" data-metric-btn="hr">HR</button>
+      <button type="button" data-metric-btn="spo2">SpO₂</button>
+      <button type="button" data-metric-btn="temp">Temp</button>
+      <button type="button" data-metric-btn="bp">BP</button>
+      <button type="button" data-metric-btn="rr">RR</button>
+      <button type="button" data-metric-btn="glu">Glucose</button>
+      <button type="button" data-metric-btn="news2">NEWS2</button>
+    </div>
+  </div>
+  <div class="card-body"><div class="chart"><noscript><p class="empty">Enable JavaScript to see charts; the readings table is below.</p></noscript></div></div>
+  {{ series|json_script:"series-data" }}
+</section>

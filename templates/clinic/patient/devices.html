@@ -1,0 +1,58 @@
+{% extends "base.html" %}{% load humanize %}
+{% block title %}Devices{% endblock %}
+{% block crumbs %}My health · Devices{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><h1>Connected devices</h1><p class="lead">Pair a wearable so it uploads readings to your record automatically. Each device gets its own secret token that you can revoke at any time.</p></div>
+</div>
+
+{% if new_token %}
+<section class="card card-body">
+  <h2>Device paired — copy its token now</h2>
+  <p class="muted small">For your security the token is shown only once. Enter it in your device's companion app.</p><br>
+  <div class="token"><code id="tok">{{ new_token }}</code><button type="button" class="btn btn-sm" data-copy="tok">Copy</button></div>
+</section><br>
+{% endif %}
+
+<div class="split">
+  <section class="card">
+    <div class="card-head"><h2>Your devices</h2></div>
+    <div class="card-body tight">
+    {% for d in devices %}
+      <div class="doc">
+        <span class="ficon"><svg><use href="#i-device"/></svg></span>
+        <div class="dmeta"><b>{{ d.label }}</b><small>{{ d.get_kind_display }} · {{ d.serial|default:"no serial" }} · <span class="mono">{{ d.token_prefix }}…</span> · {{ d.n|intcomma }} readings · last seen {{ d.last_seen_at|naturaltime|default:"never" }}</small></div>
+        {% if d.active %}
+          <span class="badge b-ok"><span class="dot"></span>Active</span>
+          <form method="post" action="{% url 'clinic:revoke_device' d.pk %}">{% csrf_token %}<button class="btn btn-sm btn-danger">Revoke</button></form>
+        {% else %}<span class="badge">Revoked</span>{% endif %}
+      </div>
+    {% empty %}<p class="empty">No devices paired yet.</p>{% endfor %}
+    </div>
+  </section>
+  <div class="stack">
+    <section class="card card-body">
+      <h2>Pair a new device</h2><br>
+      <form method="post">{% csrf_token %}
+        {% include "partials/field.html" with f=form.label %}
+        {% include "partials/field.html" with f=form.kind %}
+        {% include "partials/field.html" with f=form.serial %}
+        <button class="btn btn-primary btn-block">Generate device token</button>
+      </form>
+    </section>
+    <section class="card card-body">
+      <h3>For device developers</h3><br>
+<pre class="code">POST {{ api_url }}
+Authorization: Bearer &lt;device token&gt;
+Content-Type: application/json
+
+{"readings": [{
+  "recorded_at": "2026-10-26T08:00:00Z",
+  "heart_rate": 72, "spo2": 98,
+  "temperature_c": 36.8, "resp_rate": 14,
+  "systolic": 121, "diastolic": 79
+}]}</pre>
+    </section>
+  </div>
+</div>
+{% endblock %}

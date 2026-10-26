@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Awaiting approval{% endblock %}
+{% block public %}
+<div class="center-page">
+  <div class="center-card card card-body">
+    <span class="big-icon"><svg><use href="#i-clock"/></svg></span>
+    {% if user.rejected %}
+      <h1>Registration not approved</h1>
+      <p class="muted">An administrator could not verify your registration. Contact the CHA registry office in Galactic City.</p>
+    {% else %}
+      <h1>Thanks, {{ user.first_name|default:user.username }}</h1>
+      <p class="muted">Your {{ user.get_role_display|lower }} account is waiting for an administrator's acknowledgement.</p>
+      <ol class="steps">
+        <li class="done"><span class="n">✓</span>Registration submitted</li>
+        <li class="now"><span class="n">2</span>Administrator verifies your details{% if user.is_doctor %} and licence{% endif %}</li>
+        <li><span class="n">3</span>You get full access</li>
+      </ol>
+    {% endif %}
+    <div class="actions center-actions">
+      <a class="btn" href="{% url 'accounts:pending' %}">Check again</a>
+      <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}<button class="btn">Sign out</button></form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{% extends "auth_base.html" %}
+{% block title %}Sign in{% endblock %}
+{% block auth %}
+<h2>Sign in</h2>
+<p class="sub">Use your CHA credentials. New here? <a href="{% url 'accounts:register' %}">Register</a> — an administrator will confirm your account.</p>
+<form method="post" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="toast toast-error">{{ form.non_field_errors|join:" " }}</div><br>{% endif %}
+  {% include "partials/field.html" with f=form.username %}
+  {% include "partials/field.html" with f=form.password %}
+  <input type="hidden" name="next" value="{{ next }}">
+  <button class="btn btn-primary btn-lg btn-block">Sign in <svg><use href="#i-arrow"/></svg></button>
+</form>
+{% if SHOW_DEMO %}<details class="demo" open>
+  <summary>Demo accounts · password <span class="mono">Coruscant-22BBY</span></summary>
+  <table>
+    <tr><td>onuta</td><td>Administrator (Medxec)</td><td><button type="button" data-fill="onuta" data-pw="Coruscant-22BBY">Use</button></td></tr>
+    <tr><td>dr.venn</td><td>Doctor · Cardiology</td><td><button type="button" data-fill="dr.venn" data-pw="Coruscant-22BBY">Use</button></td></tr>
+    <tr><td>dr.carter</td><td>Doctor · Emergency</td><td><button type="button" data-fill="dr.carter" data-pw="Coruscant-22BBY">Use</button></td></tr>
+    <tr><td>josh.marvel</td><td>Patient with wearable</td><td><button type="button" data-fill="josh.marvel" data-pw="Coruscant-22BBY">Use</button></td></tr>
+    <tr><td>ct.tech</td><td>Department · Imaging</td><td><button type="button" data-fill="ct.tech" data-pw="Coruscant-22BBY">Use</button></td></tr>
+    <tr><td>lab.tech</td><td>Department · Laboratory</td><td><button type="button" data-fill="lab.tech" data-pw="Coruscant-22BBY">Use</button></td></tr>
+    <tr><td>medic.eastport</td><td>Emergency services</td><td><button type="button" data-fill="medic.eastport" data-pw="Coruscant-22BBY">Use</button></td></tr>
+  </table>
+</details>{% endif %}
+{% endblock %}

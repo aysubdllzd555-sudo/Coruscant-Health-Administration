@@ -1,0 +1,9 @@
+{% load cha %}
+<div class="vitals">
+  <div class="vital {{ latest.heart_rate|vclass:'hr' }}"><p class="v-label">Heart rate</p><p class="v-value">{{ latest.heart_rate|default:'–' }}<small> bpm</small></p></div>
+  <div class="vital {{ latest.spo2|vclass:'spo2' }}"><p class="v-label">SpO₂</p><p class="v-value">{{ latest.spo2|default:'–' }}<small> %</small></p></div>
+  <div class="vital {{ latest.temperature_c|vclass:'temp' }}"><p class="v-label">Temp</p><p class="v-value">{{ latest.temperature_c|default:'–' }}<small> °C</small></p></div>
+  <div class="vital {{ latest.systolic|vclass:'sys' }}"><p class="v-label">Blood pressure</p><p class="v-value">{{ latest.systolic|default:'–' }}/{{ latest.diastolic|default:'–' }}</p></div>
+  <div class="vital {{ latest.resp_rate|vclass:'rr' }}"><p class="v-label">Resp. rate</p><p class="v-value">{{ latest.resp_rate|default:'–' }}<small> /min</small></p></div>
+  <div class="vital {% if latest.risk == 'high' %}abn{% elif latest.risk == 'medium' %}warn{% endif %}"><p class="v-label">NEWS2</p><p class="v-value">{% if latest and latest.news2 is not None %}{{ latest.news2 }}{% else %}–{% endif %}<small> {{ latest.risk|default:'' }}</small></p></div>
+</div>

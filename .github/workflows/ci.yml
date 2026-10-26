@@ -1,0 +1,61 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: cha, POSTGRES_PASSWORD: cha, POSTGRES_DB: cha }
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U cha" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      CI: "1"
+      DJANGO_SECRET_KEY: ci-only-secret
+      DATABASE_URL: postgres://cha:cha@localhost:5432/cha
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13", cache: pip }
+      - run: pip install -r requirements-dev.txt
+      - name: Lint
+        run: ruff check .
+      - name: Migrations are committed
+        run: python manage.py makemigrations --check --dry-run
+      - name: Django deploy checks
+        run: python manage.py check
+      - name: Unit tests with coverage
+        run: |
+          coverage run --source=accounts,clinic,config manage.py test -v 2
+          coverage report --fail-under=80
+
+  deploy:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Trigger Render deploy
+        env:
+          HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+        run: |
+          if [ -z "$HOOK" ]; then echo "RENDER_DEPLOY_HOOK_URL secret not set – skipping"; exit 0; fi
+          curl -fsS -X POST "$HOOK"
+      - name: Smoke test
+        run: |
+          URL="https://coruscant-health-administration.onrender.com/healthz"
+          for i in $(seq 1 30); do
+            if curl -fsS "$URL" | grep -q '"status": "ok"'; then echo "healthy"; exit 0; fi
+            sleep 20
+          done
+          echo "service did not become healthy" && exit 1

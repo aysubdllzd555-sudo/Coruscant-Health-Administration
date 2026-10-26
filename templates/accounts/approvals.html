@@ -1,0 +1,28 @@
+{% extends "base.html" %}{% load humanize %}
+{% block title %}Approvals{% endblock %}
+{% block crumbs %}Administration · Approvals{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Registration approvals</h1><p class="lead">Acknowledge new patients, doctors and staff. Verify doctors' licence numbers against the Republic medical registry before approving.</p></div></div>
+<section class="card">
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>Applicant</th><th>Role</th><th>Details</th><th class="hide-sm">Submitted</th><th class="r">Decision</th></tr></thead>
+    <tbody>
+    {% for u in queue %}
+      <tr>
+        <td><span class="pt-name"><b>{{ u.display_name }}</b><small>{{ u.username }} · {{ u.email }}</small></span></td>
+        <td><span class="badge {% if u.is_doctor %}b-info{% elif u.is_patient %}b-ok{% else %}b-accent{% endif %}">{{ u.get_role_display }}</span></td>
+        <td class="small">
+          {% if u.is_doctor and u.doctor_profile %}{{ u.doctor_profile.specialty|default:"—" }} · licence <span class="mono">{{ u.doctor_profile.license_number }}</span>
+          {% elif u.is_patient and u.patient %}DOB {{ u.patient.date_of_birth|date:"d M Y" }} · {{ u.patient.get_district_display|default:"—" }} · <span class="mono">{{ u.patient.mrn }}</span>
+          {% elif u.department %}{{ u.department.name }}{% else %}—{% endif %}
+        </td>
+        <td class="hide-sm small">{{ u.date_joined|naturaltime }}</td>
+        <td class="r"><form method="post" action="{% url 'accounts:decide' u.pk %}" class="row">{% csrf_token %}
+          <button class="btn btn-sm btn-ok" name="decision" value="approve"><svg><use href="#i-check"/></svg>Approve</button>
+          <button class="btn btn-sm btn-danger" name="decision" value="reject">Reject</button></form></td>
+      </tr>
+    {% empty %}<tr><td colspan="5" class="empty">All caught up — no pending registrations.</td></tr>{% endfor %}
+    </tbody>
+  </table></div>
+</section>
+{% endblock %}

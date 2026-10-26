@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Documents{% endblock %}
+{% block crumbs %}My health · Documents{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Your documents</h1><p class="lead">Results, letters and files shared between you and your care team.</p></div></div>
+<div class="split">
+  {% include "partials/documents.html" %}
+  {% include "partials/doc_upload.html" with doc_form=form %}
+</div>
+{% endblock %}

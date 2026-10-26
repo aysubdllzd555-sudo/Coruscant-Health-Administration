@@ -1,0 +1,48 @@
+{% extends "base.html" %}{% load humanize %}
+{% block title %}Worklist{% endblock %}
+{% block crumbs %}Clinical · Patient worklist{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><p class="eyebrow">{% if user.is_doctor %}Dr. {{ user.display_name }}{% else %}{{ user.display_name }}{% endif %}</p><h1>Patient worklist</h1>
+  <p class="lead">Sorted by NEWS2 early-warning score — the sickest patients rise to the top. Trend compares the latest readings with the preceding ones.</p></div>
+  <div class="actions"><a class="btn btn-accent" href="{% url 'clinic:ed_intake' %}"><svg><use href="#i-plus"/></svg>New patient</a></div>
+</div>
+
+<div class="kpis">
+  <div class="kpi {% if summary.high %}is-bad{% endif %}"><p class="k-label">High risk (NEWS2 ≥ 7)</p><p class="k-value">{{ summary.high }}</p><p class="k-foot">needs urgent review</p></div>
+  <div class="kpi {% if summary.worsening %}is-warn{% endif %}"><p class="k-label">Deteriorating</p><p class="k-value">{{ summary.worsening }}</p><p class="k-foot">trend worsening</p></div>
+  <div class="kpi is-ok"><p class="k-label">New results (48h)</p><p class="k-value">{{ summary.results }}</p><p class="k-foot">from your orders</p></div>
+  <div class="kpi"><p class="k-label">Patients in view</p><p class="k-value">{{ summary.total }}</p><p class="k-foot">{% if scope == 'mine' %}assigned to you{% else %}all patients{% endif %}</p></div>
+</div>
+
+<section class="card">
+  <div class="card-head wrap">
+    <nav class="tabs" aria-label="Scope">
+      <a href="?scope=mine{% if q %}&q={{ q|urlencode }}{% endif %}" {% if scope == 'mine' %}aria-current="page"{% endif %}>My patients</a>
+      <a href="?scope=all{% if q %}&q={{ q|urlencode }}{% endif %}" {% if scope == 'all' %}aria-current="page"{% endif %}>All patients</a>
+    </nav>
+    <form class="row" role="search"><input type="hidden" name="scope" value="{{ scope }}"><input type="search" name="q" value="{{ q }}" placeholder="Filter by name, MRN, complaint" aria-label="Filter"><button class="btn">Filter</button></form>
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Patient</th><th class="hide-sm">Age/Sex</th><th>NEWS2</th><th>Trend</th><th class="hide-sm">Latest vitals</th><th class="hide-sm">Location</th><th class="hide-sm">Attending</th><th class="r">Orders</th></tr></thead>
+      <tbody>
+      {% for row in rows %}{% with p=row.p r=row.latest %}
+        <tr>
+          <td><a class="row-link pt-name" href="{% url 'clinic:patient_chart' p.mrn %}">{{ p.display_name }}<small>{{ p.mrn }}{% if p.chief_complaint %} · {{ p.chief_complaint }}{% endif %}</small></a></td>
+          <td class="hide-sm num">{{ p.age|default:'?' }}{{ p.sex }}</td>
+          <td>{% include "partials/news.html" with r=r %}</td>
+          <td>{% include "partials/trend.html" with t=row.trend %}</td>
+          <td class="hide-sm num small">{% if r %}HR {{ r.heart_rate|default:'–' }} · SpO₂ {{ r.spo2|default:'–' }} · T {{ r.temperature_c|default:'–' }}<br><span class="muted">{{ r.recorded_at|naturaltime }}</span>{% else %}<span class="muted">no data</span>{% endif %}</td>
+          <td class="hide-sm">{% if p.ed_status == 'in_bay' %}<span class="badge b-info">ED · {{ p.bay }}</span>{% elif p.ed_status == 'waiting' %}<span class="badge b-warn">ED waiting</span>{% elif p.ed_status == 'inbound' %}<span class="badge b-bad">Inbound</span>{% else %}<span class="badge">Remote</span>{% endif %}</td>
+          <td class="hide-sm small">{% if p.primary_doctor %}Dr. {{ p.primary_doctor.last_name }}{% else %}<span class="muted">unassigned</span>{% endif %}</td>
+          <td class="r num">{{ p.open_orders|default:'–' }}</td>
+        </tr>
+      {% endwith %}{% empty %}
+        <tr><td colspan="8" class="empty">No patients match. {% if scope == 'mine' %}<a href="?scope=all">Show all patients</a>.{% endif %}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

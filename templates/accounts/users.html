@@ -1,0 +1,18 @@
+{% extends "base.html" %}{% load cha %}
+{% block title %}Users{% endblock %}
+{% block crumbs %}Administration · Users{% endblock %}
+{% block content %}
+<div class="page-head"><div><h1>Users</h1><p class="lead">Everyone with access to the Medical Management System.</p></div><a class="btn" href="{% url 'admin:accounts_user_changelist' %}">Edit in database admin</a></div>
+<nav class="tabs" aria-label="Role">
+  <a href="?" {% if not role %}aria-current="page"{% endif %}>All</a>
+  {% for value, label in roles %}<a href="?role={{ value }}" {% if role == value %}aria-current="page"{% endif %}>{{ label }} <span class="count">{{ counts|get:value|default:0 }}</span></a>{% endfor %}
+</nav>
+<section class="card"><div class="table-wrap"><table class="table">
+  <thead><tr><th>Name</th><th>Role</th><th class="hide-sm">Department</th><th>Status</th><th class="hide-sm">Last login</th></tr></thead>
+  <tbody>{% for u in users %}
+    <tr><td><span class="pt-name"><b>{{ u.display_name }}</b><small>{{ u.username }}</small></span></td><td>{{ u.get_role_display }}</td><td class="hide-sm">{{ u.department|default:"—" }}</td>
+    <td>{% if u.is_approved %}<span class="badge b-ok">Approved</span>{% elif u.rejected %}<span class="badge b-bad">Rejected</span>{% else %}<span class="badge b-warn">Pending</span>{% endif %}</td>
+    <td class="hide-sm small">{{ u.last_login|date:"d M Y H:i"|default:"never" }}</td></tr>
+  {% endfor %}</tbody>
+</table></div></section>
+{% endblock %}

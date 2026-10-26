@@ -1,0 +1,12 @@
+{% load cha humanize %}
+<article class="ticket prio-{{ o.priority }} {% if o.age_minutes > o.service.target_minutes %}overdue{% endif %}">
+  <div class="row between"><h4>{{ o.service.name }}</h4>{% include "partials/prio.html" with p=o.priority %}</div>
+  <p class="tmeta"><b>{{ o.patient.display_name }}</b> · <span class="mono">{{ o.patient.mrn }}</span>{% if o.patient.bay %} · ED {{ o.patient.bay }}{% endif %}<br>
+  by {{ o.ordered_by.display_name }} · <span class="age mono" title="Target {{ o.service.target_minutes }} min">{{ o.age_minutes|hm }}</span> waiting{% if o.assigned_to %} · {{ o.assigned_to.first_name }}{% endif %}</p>
+  <p class="ind">{{ o.indication }}</p>
+  {% if o.patient.allergies %}<p class="small"><span class="badge b-bad">Allergy: {{ o.patient.allergies }}</span></p><br>{% endif %}
+  <div class="row">
+    {% if action %}<form method="post" action="{% url 'clinic:advance_order' o.pk %}">{% csrf_token %}<button class="btn btn-sm btn-primary">{{ action }}</button></form>{% endif %}
+    <a class="btn btn-sm {% if not action %}btn-ok{% endif %}" href="{% url 'clinic:result_order' o.pk %}">Upload result</a>
+  </div>
+</article>

@@ -1,0 +1,39 @@
+{% extends "auth_base.html" %}
+{% block title %}Register{% endblock %}
+{% block card_class %}wide{% endblock %}
+{% block auth %}
+<h2>Create your account</h2>
+<p class="sub">Registrations are reviewed by a CHA administrator before access is granted. Already registered? <a href="{% url 'accounts:login' %}">Sign in</a>.</p>
+<form method="post" novalidate>
+  {% csrf_token %}
+  <div class="field seg role-cards">
+    <span class="label">I am registering as</span>
+    {{ form.role }}
+  </div>
+  <div class="form-grid">
+    {% include "partials/field.html" with f=form.first_name %}
+    {% include "partials/field.html" with f=form.last_name %}
+    {% include "partials/field.html" with f=form.email %}
+    {% include "partials/field.html" with f=form.phone %}
+  </div>
+  <div class="form-grid role-section" data-role-section="patient">
+    {% include "partials/field.html" with f=form.date_of_birth %}
+    {% include "partials/field.html" with f=form.sex %}
+    {% include "partials/field.html" with f=form.district %}
+    {% include "partials/field.html" with f=form.allergies %}
+  </div>
+  <div class="form-grid role-section" data-role-section="doctor">
+    {% include "partials/field.html" with f=form.specialty %}
+    {% include "partials/field.html" with f=form.license_number %}
+  </div>
+  <div class="form-grid role-section" data-role-section="department">
+    {% include "partials/field.html" with f=form.department cls="full" %}
+  </div>
+  <div class="form-grid">
+    {% include "partials/field.html" with f=form.username cls="full" %}
+    {% include "partials/field.html" with f=form.password1 %}
+    {% include "partials/field.html" with f=form.password2 %}
+  </div>
+  <button class="btn btn-primary btn-lg btn-block">Submit registration</button>
+</form>
+{% endblock %}

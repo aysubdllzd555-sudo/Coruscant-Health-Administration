@@ -1,0 +1,15 @@
+{% load cha %}
+<section class="card">
+  <div class="card-head"><h2>Documents</h2><span class="sub">{{ documents|length }} file{{ documents|length|pluralize }}</span></div>
+  <div class="card-body tight">
+  {% for d in documents %}
+    <div class="doc">
+      <span class="ficon"><svg><use href="#i-file"/></svg></span>
+      <div class="dmeta"><b>{{ d.title }}</b><small>{{ d.get_category_display }} · {{ d.size|filesize }} · {{ d.uploaded_by.display_name }} · {{ d.created_at|date:"d M Y" }}{% if d.order %} · {{ d.order.service.name }}{% endif %}</small></div>
+      <span class="badge b-ok hide-sm" title="AES-256-GCM · key {{ d.key_id }}"><svg><use href="#i-lock"/></svg>Encrypted</span>
+      {% if d.content_type in "application/pdf image/png image/jpeg text/plain" %}<a class="btn btn-sm" href="{% url 'clinic:download_document' d.uid %}?inline=1" target="_blank" rel="noopener">View</a>{% endif %}
+      <a class="btn btn-sm" href="{% url 'clinic:download_document' d.uid %}">Download</a>
+    </div>
+  {% empty %}<p class="empty">No documents yet.</p>{% endfor %}
+  </div>
+</section>

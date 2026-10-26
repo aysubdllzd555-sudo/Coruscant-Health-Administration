@@ -1,0 +1,40 @@
+{% extends "base.html" %}{% load humanize %}
+{% block title %}System monitor{% endblock %}
+{% block crumbs %}Administration · System monitor{% endblock %}
+{% block content %}
+<div class="page-head"><div><p class="eyebrow">Medxec console</p><h1>System monitor</h1><p class="lead">Application health, database schema state and the access audit trail.</p></div>
+<div class="actions"><a class="btn" href="{% url 'healthz' %}">/healthz</a><a class="btn" href="{% url 'admin:index' %}"><svg><use href="#i-db"/></svg>Database admin</a></div></div>
+
+<div class="kpis">{% for label, n in stats %}<div class="kpi"><p class="k-label">{{ label }}</p><p class="k-value">{{ n|intcomma }}</p></div>{% endfor %}</div>
+
+<div class="grid cols-2">
+  <section class="card">
+    <div class="card-head"><h2>Runtime</h2><span class="badge b-ok"><span class="dot"></span>Healthy</span></div>
+    <div class="card-body tight"><table class="table">
+      <tr><td>Version</td><td class="mono">v{{ APP_VERSION }} · {{ GIT_SHA }}</td></tr>
+      <tr><td>Database</td><td class="mono">{{ db_vendor }} · {{ db_ms|floatformat:1 }} ms</td></tr>
+      <tr><td>Schema</td><td>{% if pending_migrations %}<span class="badge b-warn">{{ pending_migrations|length }} migration(s) pending</span>{% else %}<span class="badge b-ok">Up to date</span>{% endif %} <span class="small muted">{{ applied_count }} applied</span></td></tr>
+      <tr><td>Uptime (worker)</td><td class="mono">{{ uptime_min }} min</td></tr>
+      <tr><td>Python / Django</td><td class="mono">{{ python }} / {{ django }}</td></tr>
+      <tr><td>Debug mode</td><td>{% if debug %}<span class="badge b-warn">On</span>{% else %}<span class="badge b-ok">Off</span>{% endif %}</td></tr>
+    </table></div>
+  </section>
+  <section class="card">
+    <div class="card-head"><h2>Upgrades &amp; database</h2></div>
+    <div class="card-body small">
+      <p>Every push to <span class="mono">main</span> runs lint + tests in CI, then deploys. The release step applies database migrations (<span class="mono">manage.py migrate</span>) before new workers take traffic, so the schema always matches the code.</p><br>
+      <p>Tables are created and evolved by Django migrations — never by hand. Document keys can be rotated with <span class="mono">manage.py rotate_document_keys</span>.</p>
+    </div>
+  </section>
+</div>
+<br>
+<section class="card">
+  <div class="card-head"><h2>Audit trail</h2><span class="sub">latest 40 events · read-only</span></div>
+  <div class="table-wrap"><table class="table">
+    <thead><tr><th>When</th><th>Who</th><th>Action</th><th>Target</th><th class="hide-sm">Patient</th><th class="hide-sm">IP</th></tr></thead>
+    <tbody>{% for e in events %}
+      <tr><td class="small nowrap">{{ e.at|naturaltime }}</td><td>{{ e.actor.display_name|default:"system" }}</td><td><span class="badge">{{ e.action }}</span></td><td class="small">{{ e.target }}</td><td class="hide-sm small mono">{{ e.patient.mrn|default:"" }}</td><td class="hide-sm small mono">{{ e.ip|default:"" }}</td></tr>
+    {% empty %}<tr><td colspan="6" class="empty">No events yet.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</section>
+{% endblock %}

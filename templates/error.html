@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="center-card card card-body">
+  <span class="big-icon"><svg><use href="#i-shield"/></svg></span>
+  <p class="mono muted">{{ code }}</p><h1>{{ title }}</h1><br><p class="muted">{{ text }}</p><br>
+  <a class="btn btn-primary" href="{% url 'home' %}">Back to my workspace</a>
+</div>
+{% endblock %}
+{% block public %}
+<div class="center-page"><div class="center-card card card-body">
+  <p class="mono muted">{{ code }}</p><h1>{{ title }}</h1><br><p class="muted">{{ text }}</p><br>
+  <a class="btn btn-primary" href="{% url 'accounts:login' %}">Sign in</a>
+</div></div>
+{% endblock %}
