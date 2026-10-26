@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}My health{% endblock %}
+{% block content %}
+<div class="page-title">
+  <h1>Hello, {{ patient.full_name }}</h1>
+  <p class="muted">Doctor: {{ patient.doctor|default:"not assigned yet" }} · Your condition: <span class="tag {{ patient.status }}">{{ patient.status }}</span></p>
+</div>
+
+<div class="columns">
+  <div>
+    <div class="box">
+      <h2>My health readings</h2>
+      {% include "clinic/_readings.html" %}
+    </div>
+
+    <div class="box">
+      <h2>Doctor's suggestions</h2>
+      {% for r in reports %}
+        <div class="report">
+          <b>{{ r.doctor }}</b> <span class="muted">{{ r.created_at|date:"d.m.Y" }}</span> <span class="tag {{ r.condition }}">{{ r.get_condition_display }}</span>
+          <p>{{ r.notes }}</p>
+          <div class="prescription">{{ r.prescription }}</div>
+        </div>
+      {% empty %}<p class="muted">Your doctor has not written a report yet.</p>{% endfor %}
+    </div>
+
+    <div class="box">
+      <h2>My tests and scans</h2>
+      <table>
+        <tr><th>Service</th><th>Status</th><th>Result</th></tr>
+        {% for o in orders %}<tr><td>{{ o.get_service_display }}</td><td><span class="tag {{ o.status }}">{{ o.get_status_display }}</span></td><td>{{ o.result|default:"—" }}</td></tr>
+        {% empty %}<tr><td colspan="3" class="muted">No orders.</td></tr>{% endfor %}
+      </table>
+    </div>
+  </div>
+
+  <div>
+    <div class="box">
+      <h2>Upload data from my device</h2>
+      <form method="post" action="{% url 'upload_csv' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ csv_form.as_p }}
+        <button>Upload CSV</button>
+      </form>
+    </div>
+    <div class="box">
+      <h2>Add a reading manually</h2>
+      <form method="post" action="{% url 'add_reading' %}">
+        {% csrf_token %}
+        {{ reading_form.as_p }}
+        <button>Save</button>
+      </form>
+    </div>
+    {% include "clinic/_chat.html" %}
+    {% include "clinic/_documents.html" %}
+  </div>
+</div>
+{% endblock %}

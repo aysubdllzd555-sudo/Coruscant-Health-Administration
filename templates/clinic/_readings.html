@@ -1,0 +1,13 @@
+<table>
+  <tr><th>Time</th><th>Heart rate</th><th>Blood pressure</th><th>Temperature</th><th>Oxygen</th></tr>
+  {% for r in readings %}
+  <tr>
+    <td>{{ r.recorded_at|date:"d.m.Y H:i" }}</td>
+    <td {% if not r.is_heart_rate_ok %}class="bad"{% endif %}>{{ r.heart_rate }} bpm</td>
+    <td {% if not r.is_pressure_ok %}class="bad"{% endif %}>{{ r.systolic }}/{{ r.diastolic }}</td>
+    <td {% if not r.is_temperature_ok %}class="bad"{% endif %}>{{ r.temperature }} °C</td>
+    <td {% if not r.is_oxygen_ok %}class="bad"{% endif %}>{{ r.oxygen }} %</td>
+  </tr>
+  {% empty %}<tr><td colspan="5" class="muted">No readings yet.</td></tr>{% endfor %}
+</table>
+<p class="muted">Red values are outside the normal range.</p>

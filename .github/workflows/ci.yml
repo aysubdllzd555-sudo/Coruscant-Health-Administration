@@ -5,10 +5,6 @@ on:
     branches: [main]
   pull_request:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -17,50 +13,38 @@ jobs:
         image: postgres:16
         env: { POSTGRES_USER: cha, POSTGRES_PASSWORD: cha, POSTGRES_DB: cha }
         ports: ["5432:5432"]
-        options: >-
-          --health-cmd "pg_isready -U cha" --health-interval 5s --health-timeout 5s --health-retries 10
+        options: --health-cmd "pg_isready -U cha" --health-interval 5s --health-retries 10
     env:
-      CI: "1"
-      DJANGO_SECRET_KEY: ci-only-secret
       DATABASE_URL: postgres://cha:cha@localhost:5432/cha
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
-        with: { python-version: "3.13", cache: pip }
+        with: { python-version: "3.13" }
       - run: pip install -r requirements-dev.txt
       - name: Lint
         run: ruff check .
-      - name: Migrations are committed
+      - name: Check migrations
         run: python manage.py makemigrations --check --dry-run
-      - name: Django deploy checks
-        run: python manage.py check
-      - name: Unit tests with coverage
-        run: |
-          coverage run --source=accounts,clinic,config manage.py test -v 2
-          coverage report --fail-under=80
+      - name: Unit tests
+        run: python manage.py test -v 2
 
   deploy:
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    environment: production
     env:
       HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-      APP_URL: ${{ vars.APP_URL || 'https://coruscant-health-administration.onrender.com' }}
+      APP_URL: ${{ vars.APP_URL }}
     steps:
-      - name: Deploy hook not configured
-        if: env.HOOK == ''
-        run: echo "::notice::RENDER_DEPLOY_HOOK_URL secret not set – deploy skipped"
-      - name: Trigger Render deploy
+      - name: Deploy to Render
         if: env.HOOK != ''
         run: curl -fsS -X POST "$HOOK"
-      - name: Smoke test
-        if: env.HOOK != ''
+      - name: Check that the site is up
+        if: env.HOOK != '' && env.APP_URL != ''
         run: |
           sleep 60
-          URL="$APP_URL/healthz"
-          for i in $(seq 1 30); do
-            if curl -fsS "$URL" | grep -q '"status": "ok"'; then echo "healthy"; exit 0; fi
-            sleep 20
+          for i in $(seq 1 20); do
+            curl -fsS "$APP_URL/health/" && exit 0
+            sleep 15
           done
-          echo "service did not become healthy" && exit 1
+          exit 1

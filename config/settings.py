@@ -1,35 +1,18 @@
-"""
-Coruscant Health Administration — Medical Management System.
-Settings are 12-factor: everything environment-specific comes from env vars.
-"""
 import os
-import sys
 from pathlib import Path
 
 import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Secrets and environment-specific values come from environment variables.
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-only-secret-key")
+DEBUG = os.environ.get("DJANGO_DEBUG", "0") == "1"
 
-def env_bool(name, default=False):
-    return os.environ.get(name, str(default)).lower() in {"1", "true", "yes", "on"}
-
-
-DEBUG = env_bool("DJANGO_DEBUG", False)
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY") or (
-    "dev-insecure-key-change-me" if DEBUG or os.environ.get("CI") or "test" in sys.argv else None
-)
-if not SECRET_KEY:
-    raise RuntimeError("DJANGO_SECRET_KEY must be set in production")
-
-ALLOWED_HOSTS = [h.strip() for h in os.environ.get("DJANGO_ALLOWED_HOSTS", "localhost,127.0.0.1,testserver").split(",") if h.strip()]
-if os.environ.get("RENDER_EXTERNAL_HOSTNAME"):
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "testserver"]
+if os.environ.get("RENDER_EXTERNAL_HOSTNAME"):  # set automatically by Render
     ALLOWED_HOSTS.append(os.environ["RENDER_EXTERNAL_HOSTNAME"])
-CSRF_TRUSTED_ORIGINS = [f"https://{h}" for h in ALLOWED_HOSTS if h not in {"localhost", "127.0.0.1", "testserver"}]
-
-APP_VERSION = os.environ.get("APP_VERSION", "1.0.0")
-GIT_SHA = os.environ.get("RENDER_GIT_COMMIT", os.environ.get("GIT_SHA", "local"))[:7]
-SHOW_DEMO_ACCOUNTS = env_bool("SHOW_DEMO_ACCOUNTS", True)
+CSRF_TRUSTED_ORIGINS = [f"https://{h}" for h in ALLOWED_HOSTS if "." in h and h != "127.0.0.1"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -38,7 +21,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django.contrib.humanize",
     "accounts",
     "clinic",
 ]
@@ -52,11 +34,9 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "config.middleware.SecurityHeadersMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
-
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -67,40 +47,29 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "config.context_processors.app_meta",
             ],
         },
     },
 ]
-
 WSGI_APPLICATION = "config.wsgi.application"
 
+# PostgreSQL on Render (DATABASE_URL), SQLite on a laptop.
 DATABASES = {
-    "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
-        conn_max_age=600,
-    )
+    "default": dj_database_url.config(default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}", conn_max_age=600)
 }
 
 AUTH_USER_MODEL = "accounts.User"
-LOGIN_URL = "accounts:login"
-LOGIN_REDIRECT_URL = "home"
-LOGOUT_REDIRECT_URL = "accounts:login"
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "dashboard"
+LOGOUT_REDIRECT_URL = "login"
 
-# Scrypt is memory-hard and ships with Django (no native deps); PBKDF2 kept for upgrades.
-PASSWORD_HASHERS = [
-    "django.contrib.auth.hashers.ScryptPasswordHasher",
-    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
-]
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 10}},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator", "OPTIONS": {"min_length": 8}},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
 LANGUAGE_CODE = "en-us"
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Baku"
 USE_I18N = True
 USE_TZ = True
 
@@ -109,42 +78,17 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
-        if DEBUG or "test" in sys.argv
-        else "whitenoise.storage.CompressedManifestStaticFilesStorage"
-    },
+    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
 }
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-DOCUMENT_MASTER_KEYS = os.environ.get("DOCUMENT_MASTER_KEYS", "")
-MAX_UPLOAD_BYTES = int(os.environ.get("MAX_UPLOAD_BYTES", 10 * 1024 * 1024))
-DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_BYTES + 1024 * 1024
-FILE_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_BYTES + 1024 * 1024
 
-SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = "Lax"
-SESSION_COOKIE_AGE = 60 * 60 * 8  
-CSRF_COOKIE_SAMESITE = "Lax"
-X_FRAME_OPTIONS = "DENY"
-SECURE_CONTENT_TYPE_NOSNIFF = True
-SECURE_REFERRER_POLICY = "same-origin"
-if not DEBUG and not os.environ.get("CI") and "test" not in sys.argv:
-    SECURE_SSL_REDIRECT = env_bool("DJANGO_SSL_REDIRECT", True)
+# Key used to encrypt uploaded documents (AES-256-GCM). See clinic/encryption.py
+DOCUMENT_KEY = os.environ.get("DOCUMENT_MASTER_KEYS", "")
+MAX_UPLOAD_MB = 10
+
+# HTTPS-only cookies and HSTS when running in production
+if not DEBUG and os.environ.get("RENDER"):
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 365
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-    SECURE_REDIRECT_EXEMPT = [r"^healthz$"]
-
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler"}},
-    "root": {"handlers": ["console"], "level": os.environ.get("LOG_LEVEL", "INFO")},
-}
-if "test" in sys.argv:
-    LOGGING["loggers"] = {"django.request": {"level": "CRITICAL"}}
-    PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]  # speed only; never in prod
+    SECURE_HSTS_SECONDS = 31536000

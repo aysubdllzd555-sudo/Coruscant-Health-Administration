@@ -1,0 +1,15 @@
+<div class="box">
+  <h2>Documents</h2>
+  <table>
+    {% for d in documents %}
+    <tr><td><a href="{% url 'download_document' d.id %}">{{ d.title }}</a><br><span class="muted">{{ d.filename }} · {{ d.uploaded_by }} · {{ d.created_at|date:"d.m.Y" }}</span></td></tr>
+    {% empty %}<tr><td class="muted">No documents.</td></tr>{% endfor %}
+  </table>
+  <br>
+  <form method="post" action="{% url 'upload_document' patient.id %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ document_form.as_p }}
+    <button>Upload</button>
+  </form>
+  <p class="muted">Files are encrypted with AES-256-GCM before they are saved.</p>
+</div>

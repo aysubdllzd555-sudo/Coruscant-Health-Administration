@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Emergency{% endblock %}
+{% block content %}
+<div class="page-title"><h1>Emergency services</h1><p class="muted">Add a new patient in a few seconds. Only name, complaint and priority are required.</p></div>
+
+<div class="columns">
+  <div class="box">
+    <h2>Emergency patients</h2>
+    <table>
+      <tr><th>Priority</th><th>Name</th><th>Complaint</th><th>Arrived</th></tr>
+      {% for p in patients %}
+      <tr>
+        <td><span class="tag {{ p.priority }}">{{ p.get_priority_display }}</span></td>
+        <td><a href="{% url 'patient_detail' p.id %}">{{ p.full_name }}</a></td>
+        <td>{{ p.complaint }}</td>
+        <td class="muted">{{ p.created_at|date:"d.m H:i" }}</td>
+      </tr>
+      {% empty %}<tr><td colspan="4" class="muted">No emergency patients.</td></tr>{% endfor %}
+    </table>
+  </div>
+  <div class="box">
+    <h2>New patient</h2>
+    <form method="post">{% csrf_token %}{{ form.as_p }}<button>Add patient</button></form>
+  </div>
+</div>
+{% endblock %}

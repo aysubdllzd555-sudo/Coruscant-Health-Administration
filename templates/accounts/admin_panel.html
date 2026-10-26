@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Administration{% endblock %}
+{% block content %}
+<div class="page-title"><h1>Administration</h1><p class="muted">Approve registrations and monitor the application. Database: {{ database }}</p></div>
+
+<div class="stats">
+  {% for name, value in stats.items %}<div class="stat"><span class="muted">{{ name }}</span><b>{{ value }}</b></div>{% endfor %}
+</div>
+
+<div class="box">
+  <h2>Waiting for approval ({{ waiting|length }})</h2>
+  <table>
+    <tr><th>Name</th><th>Username</th><th>Role</th><th>Details</th><th>Registered</th><th></th></tr>
+    {% for u in waiting %}
+    <tr>
+      <td>{{ u.get_full_name }}</td><td>{{ u.username }}</td><td>{{ u.get_role_display }}</td>
+      <td class="muted">{% if u.license_number %}License {{ u.license_number }} {% endif %}{{ u.specialty }} {{ u.get_department_display }}</td>
+      <td class="muted">{{ u.date_joined|date:"d.m.Y H:i" }}</td>
+      <td>
+        <form method="post" action="{% url 'approve_user' u.id %}" class="inline">{% csrf_token %}
+          <button class="small" name="action" value="approve">Approve</button>
+          <button class="small red" name="action" value="reject">Reject</button>
+        </form>
+      </td>
+    </tr>
+    {% empty %}<tr><td colspan="6" class="muted">No registrations waiting.</td></tr>{% endfor %}
+  </table>
+</div>
+
+<div class="box">
+  <h2>Active users</h2>
+  <table>
+    <tr><th>Username</th><th>Name</th><th>Role</th><th>Last login</th></tr>
+    {% for u in users %}<tr><td>{{ u.username }}</td><td>{{ u.get_full_name }}</td><td>{{ u.get_role_display }}</td><td class="muted">{{ u.last_login|date:"d.m.Y H:i"|default:"never" }}</td></tr>{% endfor %}
+  </table>
+  <p class="muted">Tables are created with <code>python manage.py migrate</code>. Every push to GitHub runs the tests and upgrades the app automatically (CI/CD).</p>
+</div>
+{% endblock %}

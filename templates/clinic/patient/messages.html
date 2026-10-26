@@ -1,7 +1,0 @@
-{% extends "base.html" %}
-{% block title %}Messages{% endblock %}
-{% block crumbs %}My health · Messages{% endblock %}
-{% block content %}
-<div class="page-head"><div><h1>Messages</h1><p class="lead">Talk to your care team{% if patient.primary_doctor %} — Dr. {{ patient.primary_doctor.display_name }} is your attending physician{% endif %}. For emergencies call medcenter services.</p></div></div>
-<div class="split">{% include "partials/thread.html" with msg_form=form %}<div></div></div>
-{% endblock %}

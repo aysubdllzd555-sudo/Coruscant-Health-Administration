@@ -1,0 +1,13 @@
+<div class="box">
+  <h2>Messages</h2>
+  <div class="chat">
+    {% for m in chat %}
+      <div class="msg {% if m.sender == user %}me{% endif %}"><b>{{ m.sender }}</b> <span class="muted">{{ m.created_at|date:"d.m H:i" }}</span><br>{{ m.text }}</div>
+    {% empty %}<p class="muted">No messages yet.</p>{% endfor %}
+  </div>
+  <form method="post" action="{% url 'send_message' patient.id %}">
+    {% csrf_token %}
+    {{ message_form.as_p }}
+    <button>Send</button>
+  </form>
+</div>

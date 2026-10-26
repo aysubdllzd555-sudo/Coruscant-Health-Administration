@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Patients{% endblock %}
+{% block content %}
+<div class="page-title"><h1>Patients</h1><p class="muted">Open a patient to see the readings, write a report or order a service.</p></div>
+<div class="box">
+  <form method="get" class="two">
+    <input name="q" value="{{ search }}" placeholder="Search by name">
+    <div><button>Search</button></div>
+  </form>
+  <br>
+  <table>
+    <tr><th>Name</th><th>Doctor</th><th>Condition</th><th>Last reading</th><th>Type</th></tr>
+    {% for p in patients %}
+    <tr>
+      <td><a href="{% url 'patient_detail' p.id %}">{{ p.full_name }}</a></td>
+      <td>{{ p.doctor|default:"—" }}</td>
+      <td><span class="tag {{ p.status }}">{{ p.status }}</span></td>
+      <td class="muted">{{ p.readings.first.recorded_at|date:"d.m.Y H:i"|default:"—" }}</td>
+      <td>{% if p.is_emergency %}<span class="tag {{ p.priority }}">Emergency · {{ p.get_priority_display }}</span>{% else %}Registered{% endif %}</td>
+    </tr>
+    {% empty %}<tr><td colspan="5" class="muted">No patients found.</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

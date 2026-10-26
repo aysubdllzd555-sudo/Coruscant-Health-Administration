@@ -1,7 +1,8 @@
+# Render Blueprint: creates the PostgreSQL database and the web service.
 databases:
   - name: cha-db
     plan: free
-    region: frankfurt        
+    region: frankfurt        # same region as the web service
     databaseName: cha
     user: cha
 
@@ -12,10 +13,10 @@ services:
     plan: free
     region: frankfurt
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --no-input
-
-    startCommand: python manage.py migrate --no-input && python manage.py seed_cha --demo && gunicorn config.wsgi:application --workers 2 --timeout 60 --access-logfile -
-    healthCheckPath: /healthz
-    autoDeploy: false          
+    # create/upgrade the database tables, add demo data, start the server
+    startCommand: python manage.py migrate --no-input && python manage.py seed_cha --demo && gunicorn config.wsgi:application
+    healthCheckPath: /health/
+    autoDeploy: false        # GitHub Actions deploys only after the tests pass
     envVars:
       - key: PYTHON_VERSION
         value: 3.13.1
@@ -24,10 +25,4 @@ services:
       - key: DJANGO_SECRET_KEY
         generateValue: true
       - key: DOCUMENT_MASTER_KEYS
-        sync: false            
-      - key: DJANGO_ALLOWED_HOSTS
-        value: coruscant-health-administration.onrender.com
-      - key: SEED_DEMO
-        value: "1"
-      - key: SHOW_DEMO_ACCOUNTS
-        value: "true"
+        sync: false

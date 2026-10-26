@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Orders{% endblock %}
+{% block content %}
+<div class="page-title"><h1>{{ department }} — orders</h1><p class="muted">Receive orders, execute them and upload the results.</p></div>
+
+<div class="box">
+  <h2>Open orders ({{ open_orders|length }})</h2>
+  <table>
+    <tr><th>Patient</th><th>Service</th><th>Ordered by</th><th>Status</th><th>Action</th></tr>
+    {% for o in open_orders %}
+    <tr>
+      <td>{{ o.patient }}<br><span class="bad">Allergies: {{ o.patient.allergies|default:"none" }}</span></td>
+      <td>{{ o.get_service_display }}<br><span class="muted">{{ o.notes }}</span></td>
+      <td>{{ o.doctor }}<br><span class="muted">{{ o.created_at|date:"d.m.Y H:i" }}</span></td>
+      <td><span class="tag {{ o.status }}">{{ o.get_status_display }}</span></td>
+      <td>
+        {% if o.status == "pending" %}
+          <form method="post" action="{% url 'start_order' o.id %}">{% csrf_token %}<button class="small">Start</button></form>
+        {% else %}
+          <form method="post" action="{% url 'complete_order' o.id %}" enctype="multipart/form-data">
+            {% csrf_token %}{{ result_form.as_p }}<button class="small">Upload result</button>
+          </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}<tr><td colspan="5" class="muted">No open orders.</td></tr>{% endfor %}
+  </table>
+</div>
+
+<div class="box">
+  <h2>Completed</h2>
+  <table>
+    <tr><th>Patient</th><th>Service</th><th>Result</th><th>Completed</th></tr>
+    {% for o in done_orders %}<tr><td>{{ o.patient }}</td><td>{{ o.get_service_display }}</td><td>{{ o.result }}</td><td class="muted">{{ o.completed_at|date:"d.m.Y H:i" }}</td></tr>
+    {% empty %}<tr><td colspan="4" class="muted">Nothing completed yet.</td></tr>{% endfor %}
+  </table>
+</div>
+{% endblock %}

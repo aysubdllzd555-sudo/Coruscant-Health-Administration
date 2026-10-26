@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}{{ patient.full_name }}{% endblock %}
+{% block content %}
+<div class="page-title">
+  <h1>{{ patient.full_name }}</h1>
+  <p class="muted">
+    Born {{ patient.date_of_birth|date:"d.m.Y"|default:"?" }} · {{ patient.get_gender_display|default:"" }} · Blood {{ patient.blood_type|default:"?" }}
+    · <b class="bad">Allergies: {{ patient.allergies|default:"none" }}</b>
+    · Condition: <span class="tag {{ patient.status }}">{{ patient.status }}</span>
+    {% if patient.is_emergency %}· <span class="tag {{ patient.priority }}">{{ patient.complaint }}</span>{% endif %}
+  </p>
+</div>
+
+<div class="columns">
+  <div>
+    <div class="box"><h2>Health readings</h2>{% include "clinic/_readings.html" %}</div>
+
+    <div class="box">
+      <h2>Reports</h2>
+      {% for r in reports %}
+        <div class="report">
+          <b>{{ r.doctor }}</b> <span class="muted">{{ r.created_at|date:"d.m.Y H:i" }}</span> <span class="tag {{ r.condition }}">{{ r.get_condition_display }}</span>
+          <p>{{ r.notes }}</p>
+          <div class="prescription">{{ r.prescription }}</div>
+        </div>
+      {% empty %}<p class="muted">No reports yet.</p>{% endfor %}
+    </div>
+
+    <div class="box">
+      <h2>Orders</h2>
+      <table>
+        <tr><th>Service</th><th>Department</th><th>Status</th><th>Result</th></tr>
+        {% for o in orders %}<tr><td>{{ o.get_service_display }}<br><span class="muted">{{ o.notes }}</span></td><td>{{ o.get_department_display }}</td><td><span class="tag {{ o.status }}">{{ o.get_status_display }}</span></td><td>{{ o.result|default:"—" }}</td></tr>
+        {% empty %}<tr><td colspan="4" class="muted">No orders.</td></tr>{% endfor %}
+      </table>
+    </div>
+  </div>
+
+  <div>
+    {% if user.role == "doctor" %}
+    <div class="box">
+      <h2>Write a report</h2>
+      <form method="post" action="{% url 'write_report' patient.id %}">{% csrf_token %}{{ report_form.as_p }}<button>Send report</button></form>
+    </div>
+    <div class="box">
+      <h2>Order a service</h2>
+      <form method="post" action="{% url 'create_order' patient.id %}">{% csrf_token %}{{ order_form.as_p }}<button>Order</button></form>
+    </div>
+    {% endif %}
+    {% include "clinic/_chat.html" %}
+    {% include "clinic/_documents.html" %}
+  </div>
+</div>
+{% endblock %}
