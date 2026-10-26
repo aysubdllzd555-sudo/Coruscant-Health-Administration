@@ -1,10 +1,9 @@
-/* Coruscant Health — progressive enhancement. Every page works without JS. */
 (function () {
   "use strict";
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
-  /* ---- theme toggle ---- */
+  
   $$("[data-theme-toggle]").forEach(function (btn) {
     btn.addEventListener("click", function () {
       var root = document.documentElement;
@@ -16,7 +15,7 @@
     });
   });
 
-  /* ---- mobile menu ---- */
+  
   var sidebar = $("#sidebar");
   $$("[data-menu]").forEach(function (b) {
     b.addEventListener("click", function (e) {
@@ -29,7 +28,7 @@
     if (sidebar && sidebar.classList.contains("open") && !sidebar.contains(e.target)) sidebar.classList.remove("open");
   });
 
-  /* ---- clock (Galactic Standard ≈ local) ---- */
+  
   var clock = $("[data-clock]");
   function tick() {
     if (!clock) return;
@@ -39,17 +38,17 @@
   }
   tick(); setInterval(tick, 15000);
 
-  /* ---- toasts ---- */
+  
   $$("[data-dismiss]").forEach(function (b) { b.addEventListener("click", function () { b.parentNode.remove(); }); });
   setTimeout(function () { $$(".toast-success, .toast-info").forEach(function (t) { t.style.transition = "opacity .4s"; t.style.opacity = 0; setTimeout(function () { t.remove(); }, 450); }); }, 6000);
 
-  /* ---- localise timestamps ---- */
+  
   $$("time[data-local]").forEach(function (t) {
     var d = new Date(t.getAttribute("datetime"));
     if (!isNaN(d)) t.textContent = d.toLocaleString([], { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
   });
 
-  /* ---- keyboard shortcuts ---- */
+  
   document.addEventListener("keydown", function (e) {
     var tag = (e.target.tagName || "").toLowerCase();
     if (tag === "input" || tag === "textarea" || tag === "select" || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -57,7 +56,7 @@
     if (e.key === "n" || e.key === "N") { var link = $('a[href$="/ed/intake/"]'); if (link) { e.preventDefault(); location.href = link.href; } }
   });
 
-  /* ---- tabs ---- */
+  
   $$("[data-tabs]").forEach(function (group) {
     var tabs = $$('[role="tab"]', group);
     function show(id, push) {
@@ -82,7 +81,7 @@
     if (initial) show(initial.getAttribute("aria-controls"), false);
   });
 
-  /* ---- vitals chart (dependency-free SVG) ---- */
+  
   var METRICS = {
     hr:    { label: "Heart rate", unit: "bpm", band: [51, 90] },
     spo2:  { label: "SpO₂", unit: "%", band: [96, 100] },
@@ -171,7 +170,7 @@
     var rt; window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(render, 120); });
   });
 
-  /* ---- drag & drop upload zones ---- */
+  
   $$(".dropzone").forEach(function (z) {
     var input = $("input[type=file]", z), label = $("[data-filename]", z);
     ["dragenter", "dragover"].forEach(function (ev) { z.addEventListener(ev, function (e) { e.preventDefault(); z.classList.add("drag"); }); });
@@ -180,7 +179,7 @@
     if (input && label) input.addEventListener("change", function () { label.textContent = input.files.length ? input.files[0].name : ""; });
   });
 
-  /* ---- registration: show fields for the selected role ---- */
+  
   var roleInputs = $$('input[name="role"]');
   if (roleInputs.length) {
     var sync = function () {
@@ -191,7 +190,7 @@
     sync();
   }
 
-  /* ---- demo account quick fill ---- */
+  
   $$("[data-fill]").forEach(function (b) {
     b.addEventListener("click", function () {
       var u = $("#id_username"), p = $("#id_password");
@@ -200,7 +199,7 @@
     });
   });
 
-  /* ---- bay picker ---- */
+  
   $$("[data-bay-picker]").forEach(function (wrap) {
     var target = document.getElementById(wrap.getAttribute("data-bay-picker"));
     $$("button", wrap).forEach(function (b) {
@@ -212,7 +211,7 @@
     });
   });
 
-  /* ---- copy buttons ---- */
+  
   $$("[data-copy]").forEach(function (b) {
     b.addEventListener("click", function () {
       var t = document.getElementById(b.getAttribute("data-copy"));
@@ -220,7 +219,7 @@
     });
   });
 
-  /* ---- live ED timers & board refresh ---- */
+  
   function fmt(min) { var h = Math.floor(min / 60), m = min % 60; return h + ":" + (m < 10 ? "0" : "") + m; }
   function timers() {
     $$("[data-since]").forEach(function (t) {

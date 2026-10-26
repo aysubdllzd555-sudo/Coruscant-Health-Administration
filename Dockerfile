@@ -1,4 +1,3 @@
-# Portable image for Cloud Run / ECS / Azure Container Apps / Fly.io
 FROM python:3.13-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PORT=8000
 WORKDIR /app

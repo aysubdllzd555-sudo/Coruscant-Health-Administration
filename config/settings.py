@@ -117,19 +117,14 @@ STORAGES = {
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
-# ---- Document encryption (AES-256-GCM envelope encryption) ----
-# DOCUMENT_MASTER_KEYS: comma-separated "key_id:base64url(32 bytes)". The first key encrypts,
-# all keys can decrypt (allows rotation). In dev/test a derived key is used.
 DOCUMENT_MASTER_KEYS = os.environ.get("DOCUMENT_MASTER_KEYS", "")
 MAX_UPLOAD_BYTES = int(os.environ.get("MAX_UPLOAD_BYTES", 10 * 1024 * 1024))
 DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_BYTES + 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_BYTES + 1024 * 1024
 
-# ---- Security hardening ----
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
-SESSION_COOKIE_AGE = 60 * 60 * 8  # one clinical shift
+SESSION_COOKIE_AGE = 60 * 60 * 8  
 CSRF_COOKIE_SAMESITE = "Lax"
 X_FRAME_OPTIONS = "DENY"
 SECURE_CONTENT_TYPE_NOSNIFF = True
