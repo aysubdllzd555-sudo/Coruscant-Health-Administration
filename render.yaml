@@ -1,6 +1,7 @@
 databases:
   - name: cha-db
     plan: free
+    region: frankfurt        
     databaseName: cha
     user: cha
 
@@ -11,7 +12,7 @@ services:
     plan: free
     region: frankfurt
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --no-input
-    
+
     startCommand: python manage.py migrate --no-input && python manage.py seed_cha --demo && gunicorn config.wsgi:application --workers 2 --timeout 60 --access-logfile -
     healthCheckPath: /healthz
     autoDeploy: false          
